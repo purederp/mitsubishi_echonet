@@ -148,10 +148,13 @@ param ip_address: a string representing the IPv4 address e.g "1.2.3.4"
 
 return: an array representing the received response from the ECHONET message
 """
-def sendMessage(message, ip_address):
+def sendMessage(message, ip_address, forced_local_interface=''):
     data =[]
     transaction_group = (ip_address, ENL_PORT)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    if forced_local_interface != '':
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, forced_local_interface.encode('utf-8'))
     socket_open = True
     while True:
         try:
@@ -191,7 +194,7 @@ to fully support a multitude of ECHONET devices.
 
 return: an array of discovered ECHONET node objects.
 """
-def discover(echonet_class = ""):
+def discover(echonet_class = "",forced_local_interface=''):
     eoa = []; # array containing echonet objects
     tx_payload = {
         'TID' : 0x01, # Transaction ID 1
@@ -203,9 +206,8 @@ def discover(echonet_class = ""):
     }
     # Build ECHONET discover messafge.
     message = buildEchonetMsg(tx_payload)
-
     # Send message to multicast group and receive data
-    data = sendMessage(message, ENL_MULTICAST_ADDRESS);
+    data = sendMessage(message, ENL_MULTICAST_ADDRESS,forced_local_interface);
     # Decipher received message for each node discovered:
 
     for node in data:
